@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Alias: Communication Skills (Interactive)</title>
+<style>
+  :root {
+    --bg:#0b1020; --card:#141a33; --muted:#9aa3b2; --accent:#5eead4; --text:#eef2ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+    background: radial-gradient(1000px 600px at 20% -10%, #1f2a4a 0%, #0b1020 60%),
+                radial-gradient(1000px 600px at 120% 110%, #15324a 0%, #0b1020 60%);
+    color: var(--text);
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .app { width:min(1000px, 96vw); }
+  header { display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between; margin-bottom:16px; }
+  h1 { font-size:clamp(18px, 4vw, 28px); margin:0; letter-spacing:.3px; }
+  header .controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  select, button, input[type="number"] {
+    background: #0f1430; color: var(--text); border:1px solid #2d365f; border-radius:12px;
+    padding:10px 12px; font-size:14px; outline:none;
+  }
+  button { cursor:pointer; transition:.2s transform, .2s opacity, .2s background; }
+  button:hover { transform: translateY(-1px); }
+  .pill { border-radius:999px; padding:8px 12px; background:#0f1430; border:1px solid #2d365f; color:var(--muted); }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
+  .card {
+    aspect-ratio: 5/3; display:flex; align-items:center; justify-content:center; text-align:center;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border:1px solid #2a3155; border-radius:20px; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    padding:18px; position:relative; user-select:none;
+  }
+  .card .word { font-size: clamp(20px, 5vw, 34px); line-height:1.15; font-weight:700; }
+  .card .badge {
+    position:absolute; top:10px; left:10px; font-size:12px; color:var(--muted);
+    padding:6px 10px; border:1px dashed #3a457a; border-radius:999px;
+  }
+  .footer { margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; color:var(--muted); }
+  .brand { font-size:12px; opacity:.8; }
+  .accent { color: var(--accent); font-weight:600; }
+  .spacer { flex:1; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Alias · Communication Skills in the Workplace</h1>
+      <div class="controls">
+        <label class="pill">
+          Mode:
+          <select id="mode">
+            <option value="grid" selected>Grid (all cards)</option>
+            <option value="focus">Focus (one card)</option>
+          </select>
+        </label>
+        <label class="pill">
+          Level:
+          <select id="level">
+            <option value="All" selected>All</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+          </select>
+        </label>
+        <button id="shuffle">Shuffle</button>
+        <button id="prev" class="hidden">⟵ Prev</button>
+        <button id="next" class="hidden">Next ⟶</button>
+        <label class="pill">
+          Timer <input id="timerSeconds" type="number" min="10" max="300" value="60" style="width:70px;margin-left:6px;" /> s
+        </label>
+        <button id="startTimer">Start</button>
+        <span id="timeLeft" class="pill">60s</span>
+      </div>
+    </header>
+    <main id="main" class="grid"></main>
+    <div class="footer">
+      <div class="brand">Cards: <span class="accent" id="countAll"></span> · Easy: <span class="accent" id="countEasy"></span> · Medium: <span class="accent" id="countMedium"></span></div>
+      <div class="spacer"></div>
+      <div>Tip: Use <span class="accent">Focus</span> to present one card to the team.</div>
+    </div>
+  </div>
+
+<script>
+const DATA = [{"level": "Easy", "word": "Email"}, {"level": "Easy", "word": "Meeting"}, {"level": "Easy", "word": "Conversation"}, {"level": "Easy", "word": "Listening"}, {"level": "Easy", "word": "Talking"}, {"level": "Easy", "word": "Message"}, {"level": "Easy", "word": "Feedback"}, {"level": "Easy", "word": "Phone"}, {"level": "Easy", "word": "Teamwork"}, {"level": "Easy", "word": "Boss"}, {"level": "Easy", "word": "Coworker"}, {"level": "Easy", "word": "Question"}, {"level": "Easy", "word": "Presentation"}, {"level": "Easy", "word": "Body language"}, {"level": "Easy", "word": "Chat"}, {"level": "Easy", "word": "Note"}, {"level": "Easy", "word": "Agenda"}, {"level": "Easy", "word": "Discussion"}, {"level": "Easy", "word": "Greeting"}, {"level": "Easy", "word": "Reply"}, {"level": "Easy", "word": "Schedule"}, {"level": "Easy", "word": "Report"}, {"level": "Easy", "word": "Idea"}, {"level": "Easy", "word": "Update"}, {"level": "Easy", "word": "Task"}, {"level": "Easy", "word": "Manager"}, {"level": "Easy", "word": "Client"}, {"level": "Easy", "word": "Project"}, {"level": "Easy", "word": "Colleague"}, {"level": "Easy", "word": "Break"}, {"level": "Medium", "word": "Negotiation"}, {"level": "Medium", "word": "Collaboration"}, {"level": "Medium", "word": "Active listening"}, {"level": "Medium", "word": "Tone of voice"}, {"level": "Medium", "word": "Nonverbal"}, {"level": "Medium", "word": "Eye contact"}, {"level": "Medium", "word": "Misunderstanding"}, {"level": "Medium", "word": "Constructive criticism"}, {"level": "Medium", "word": "Small talk"}, {"level": "Medium", "word": "Clarity"}, {"level": "Medium", "word": "Conflict"}, {"level": "Medium", "word": "Rapport"}, {"level": "Medium", "word": "Diplomacy"}, {"level": "Medium", "word": "Empathy"}, {"level": "Medium", "word": "Open-mindedness"}, {"level": "Medium", "word": "Respect"}, {"level": "Medium", "word": "Feedback culture"}, {"level": "Medium", "word": "Presentation skills"}, {"level": "Medium", "word": "Facilitation"}, {"level": "Medium", "word": "Listening skills"}, {"level": "Medium", "word": "Motivation"}, {"level": "Medium", "word": "Flexibility"}, {"level": "Medium", "word": "Patience"}, {"level": "Medium", "word": "Assertiveness"}, {"level": "Medium", "word": "Transparency"}, {"level": "Medium", "word": "Engagement"}, {"level": "Medium", "word": "Problem-solving"}, {"level": "Medium", "word": "Cooperation"}, {"level": "Medium", "word": "Adaptability"}, {"level": "Medium", "word": "Leadership"}];
+
+let state = {
+  mode: 'grid',
+  level: 'All',
+  index: 0,
+  order: [...Array(DATA.length).keys()],
+  timer: null,
+  timeLeft: 60
+};
+
+const main = document.getElementById('main');
+const modeSel = document.getElementById('mode');
+const levelSel = document.getElementById('level');
+const shuffleBtn = document.getElementById('shuffle');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+const timerSeconds = document.getElementById('timerSeconds');
+const startTimerBtn = document.getElementById('startTimer');
+const timeLeftEl = document.getElementById('timeLeft');
+
+function filteredIndices() {
+  return state.order.filter(i => state.level === 'All' || DATA[i].level === state.level);
+}
+
+function renderGrid() {
+  prevBtn.classList.add('hidden');
+  nextBtn.classList.add('hidden');
+  main.className = 'grid';
+  const indices = filteredIndices();
+  main.innerHTML = indices.map(i => `
+    <div class="card" data-i="${i}">
+      <div class="badge">${DATA[i].level}</div>
+      <div class="word">${DATA[i].word}</div>
+    </div>
+  `).join('');
+}
+
+function renderFocus() {
+  prevBtn.classList.remove('hidden');
+  nextBtn.classList.remove('hidden');
+  main.className = '';
+  const indices = filteredIndices();
+  if (indices.length === 0) { main.innerHTML = '<p>No cards in this filter.</p>'; return; }
+  const i = indices[Math.max(0, Math.min(state.index, indices.length-1))];
+  main.innerHTML = `
+    <div style="display:flex; justify-content:center;">
+      <div class="card" style="width:min(780px, 96vw);">
+        <div class="badge">${DATA[i].level}</div>
+        <div class="word">${DATA[i].word}</div>
+      </div>
+    </div>`;
+}
+
+function render() {
+  if (state.mode === 'grid') renderGrid(); else renderFocus();
+  timeLeftEl.textContent = state.timeLeft + 's';
+  // footer counts
+  document.getElementById('countAll').textContent = DATA.length;
+  document.getElementById('countEasy').textContent = DATA.filter(d => d.level==='Easy').length;
+  document.getElementById('countMedium').textContent = DATA.filter(d => d.level==='Medium').length;
+}
+
+function shuffle() {
+  // Fisher-Yates
+  for (let i = state.order.length -1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [state.order[i], state.order[j]] = [state.order[j], state.order[i]];
+  }
+  state.index = 0;
+  render();
+}
+
+function next() { state.index++; render(); }
+function prev() { state.index = Math.max(0, state.index-1); render(); }
+
+modeSel.addEventListener('change', e => { state.mode = e.target.value; render(); });
+levelSel.addEventListener('change', e => { state.level = e.target.value; state.index = 0; render(); });
+shuffleBtn.addEventListener('click', shuffle);
+nextBtn.addEventListener('click', next);
+prevBtn.addEventListener('click', prev);
+
+startTimerBtn.addEventListener('click', () => {
+  const secs = Math.max(10, Math.min(300, parseInt(timerSeconds.value || '60', 10)));
+  state.timeLeft = secs;
+  if (state.timer) clearInterval(state.timer);
+  state.timer = setInterval(() => {
+    state.timeLeft--;
+    timeLeftEl.textContent = state.timeLeft + 's';
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timer); state.timer = null;
+      timeLeftEl.textContent = 'Time!';
+      // beep
+      try { new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAACAA==').play(); } catch(e) {}
+    }
+  }, 1000);
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
